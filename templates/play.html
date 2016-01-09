@@ -1,0 +1,15 @@
+<html>
+<body>
+<h1>Player 1 cards:</h1>
+{% for image in p1.values() %}
+<img src='../images/{{ image }}'  style='width:120px;height:173px;float:left;margin:10px;'">
+{% endfor %}
+<div style='clear:both;'></div>
+
+<h1>Player 2 cards:</h1>
+{% for image in p2.values() %}
+<img src='../images/{{ image }}'  style='width:120px;height:173px;float:left;margin:10px;'">
+{% endfor %}
+
+</body>
+</html>

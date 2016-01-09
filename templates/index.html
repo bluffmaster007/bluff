@@ -1,0 +1,14 @@
+<div>
+<h2>
+{% for c in clientList %}
+<span class="player" id="{{ c }}">{{c}}</span>
+{% endfor %}
+</h2></div>
+
+<select multiple="multiple" class="image-picker show-html" id='card'>
+{% for id,image in images.iteritems() %}
+  <option data-img-src="../images/{{ image }}" value="{{ id }}"></option>
+<img src='../images/{{ image }}'  style='width:120px;height:173px;float:left;margin:10px;'" id="{{ id }}">
+{% endfor %}
+</select>
+

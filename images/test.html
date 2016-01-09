@@ -1,0 +1,36 @@
+<html>
+<head>
+
+<script type="text/javascript" src="http://cdnjs.cloudflare.com/ajax/libs/jquery/3.0.0-alpha1/jquery.js"></script>
+<script type="text/javascript" src="image-picker.js"></script>
+<style type="text/css">
+.image_picker_image {width:120px;height:173px;}
+</style>
+<script type="text/javascript">
+$(document).ready(function(){
+ $("select").imagepicker({limit:4});
+ console.info($("select").data('picker'));
+ 
+ $('#selected-cards').submit(function(e){
+		e.preventDefault();
+		//console.log("caught submit function");
+		console.info($("#card").val());
+		})
+ 
+});
+
+</script>
+<link rel="stylesheet" type="text/css" href="image-picker.css"></style>
+</head>
+<body>
+<form id="selected-cards">
+<select multiple="multiple" class="image-picker show-html" id='card'>
+  <option data-img-src="2_of_clubs.png" value="1">  Page 1  </option>
+  <option data-img-src="3_of_clubs.png" value="2">  Page 2  </option>
+  <option data-img-src="4_of_clubs.png" value="3">  Page 3  </option>
+  <option data-img-src="5_of_clubs.png" value="4">  Page 4  </option>
+  <option data-img-src="6_of_clubs.png" value="5">  Page 5  </option>
+</select>
+<input type="submit" value="submit">
+</body>
+</html>

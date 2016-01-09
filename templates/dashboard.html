@@ -1,0 +1,234 @@
+<html>
+<title>BLUFF MASTER</title>
+<head>
+<script type="text/javascript" src="/images/socket.io.min.js"></script>
+<script type="text/javascript" src="/images/jquery.js"></script>
+<script type="text/javascript" src="/images/image-picker.js"></script>
+<link rel="stylesheet" type="text/css" href="/images/image-picker.css"></style>
+<style type="text/css">
+.player{
+font-size:1.2em;
+margin:4px;
+padding:3px;
+}
+
+.image_picker_image {width:120px;height:173px;}
+
+</style>
+
+<script type="text/javascript" charset="utf-8">
+    var socket = io.connect('http://' + document.domain + ':' + location.port);
+	var clientId;
+	var currentTurn;
+	var clientList;
+	var cardObj={'actual':[],'fake':[]};
+	var newTurnFlag;
+	function reloadCards(){
+	$.ajax({url: "/card/"+clientId, success: function(result){		//ajax call
+			$("#gameCanvas").html(result);
+			$("select").imagepicker({limit:4});	//initialize image picker library
+			$('#entry').hide();
+			$('#gameScreen').show();
+			$('#'+currentTurn).css('background-color','yellow');
+			checkMyTurn();
+			console.warn("Cards reloaded!!!");
+		}});
+	}
+	
+	function resetTurns(){
+	for(index in clientList){
+		$("#"+clientList[index]).css('background-color','white');					
+		console.info("#"+clientList[index]);
+		}
+	}
+	function showControls(){
+	$('#actualCard').show();
+	$('#fakeCard').show();
+	}
+	function hideControls(){
+	$('#actualCard').hide();
+	$('#fakeCard').hide();
+	}
+	
+	function hideAll(){
+	$('#actualCard').hide();
+	$('#fakeCard').hide();
+	$('#play').hide();
+	$('#ShowButton').hide();
+	}
+	function showMyTurn(){
+	$('#actualCard').hide();
+	$('#fakeCard').hide();
+	$('#play').hide();
+	$('#ShowButton').hide();
+	}
+	
+	socket.on('ClientConnected', function(data) {
+		console.warn("clientConnected");
+        $('#online').append(data)
+		});
+	socket.on('notify', function(data) {
+		reloadCards();
+		alert(data);
+		});
+	socket.on('onError', function(data) {
+		showControls();
+		alert(data);
+		});
+	socket.on('cardEvent', function(data) {
+		reloadCards();
+		});
+	socket.on('playingFor', function(data) {
+		$('#playingFor').html("Play for any color of "+data);
+		});
+	
+	socket.on('checkTurn', function(data) {
+		console.info(data);
+		newTurnFlag=data[1];
+		resetTurns();
+		currentTurn=data[0];
+		$('#'+currentTurn).css('background-color','yellow');
+		checkMyTurn();
+		if(!newTurnFlag)
+				$('#fakeCard').hide();
+			else
+				$('#fakeCard').show();
+		});
+	
+	function checkMyTurn(){
+		if(currentTurn!=clientId){
+			console.info("FALSE :: client="+clientId+"and currentTurn="+currentTurn);
+			$('#submitTurn').prop('disabled',true);
+			$('#show').prop('disabled',true);
+			$('#fakeCard').hide();
+			
+		}
+		else {
+		$('#submitTurn').prop('disabled',false);
+		$('#show').prop('disabled',false);
+		$('#actualCard').show();
+		//$('#fakeCard').show();
+		$('#useOriginal').show();
+		if(!newTurnFlag)
+				$('#fakeCard').hide();
+			else
+				$('#fakeCard').show();
+		
+		
+		}
+	}
+	
+	socket.on('gameStart',function(data){
+		console.warn("gameStart");
+		console.info("game start event from server");
+		setClientId($('input[name="login_name"]').val());
+		$.ajax({url: "/users", success: function(result){
+			clientList=eval(result)
+			}});
+			
+		$.ajax({url: "/card/"+clientId, success: function(result){		//ajax call
+			$("#gameCanvas").html(result);
+			$("select").imagepicker({limit:4});	//initialize image picker library
+			$('#entry').hide();
+			$('#gameScreen').show(1000);
+			$('#'+currentTurn).css('background-color','yellow');
+			checkMyTurn();
+			console.warn("Ajax data loaded");
+		}});
+		
+		
+	});
+		
+	$(document).ready(function(){
+		console.warn("DocumentReady");
+		$('#newUser').submit(function(e){
+		e.preventDefault();
+		socket.emit('newClient',$('input[name="login_name"]').val());
+		$('input[name="login_name"]').prop('disabled', true);
+		$('#submitButton').prop('disabled',true);
+		});
+		
+		$('#selected-cards').submit(function(e){
+		e.preventDefault();
+		console.info($("#card").val());
+		socket.emit("turnPlayed",cardObj);
+		});
+
+		
+		});
+	function setActualCards(){
+	cardObj['actual']=$("#card").val();
+	$('#actualCard').hide();
+	
+	$("select").imagepicker({limit:4});
+	}
+	function setFakeCards(){
+	cardObj['fake']=$("#card").val();
+	$('#fakeCard').hide();
+
+	$("select").imagepicker({limit:4});
+	}
+	
+	
+	function callForShow(){
+	socket.emit("turnPlayed","show");
+	}
+	
+	
+	function beginGame(){
+	console.warn("BeginGame:emit-gameStartClient(clientId)");
+	console.info("Sending game start event to server");
+	socket.emit('gameStartClient',$('input[name="login_name"]').val());
+		}
+	function setClientId(id){
+	console.warn("setClientId(id)");
+		clientId=id;
+		document.title = clientId+" playing";
+		console.info("id set to:"+clientId);
+		}
+	
+</script>
+</head>
+<body>
+<h2><div id="playingFor"></div></h2>
+
+<div id="entry">
+<div id="online">Online List :<br>
+{% for c in client %}
+{{ c }} joined<br />
+{% endfor%}
+</div>
+	<form id="newUser">
+		<input name="login_name" type='text' />
+		<input type='submit' id="submitButton" value="submit">
+	</form>
+<div>
+<input id="playButton" type="button" onclick="beginGame()" value="Start Game"> when everyone joins 
+</div>
+</div>
+
+<div id="gameScreen" style="display:none">
+	<form id="selected-cards">
+	<div  id="gameCanvas">
+		<h2>Game canvas board</h2>
+	</div>
+	<span id="actualCard">
+	<input type="button" value="Actual cards" onclick="setActualCards()">
+	</span>
+	
+	<span id="fakeCard">
+	<input type="button" value="Fake cards" onclick="setFakeCards()">
+	</span>
+	
+	<span id="ShowButton">
+	<input type="button" id="show" value="Challenge" onclick="callForShow()">
+	</span>
+	
+	<span id="play">
+	<input type="submit" id="submitTurn" value="Play Turn">
+	</span>
+	</form>
+	
+</div>
+</body>
+</html>
