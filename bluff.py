@@ -12,11 +12,33 @@ from itertools import cycle
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'secret!'
 socketio=SocketIO(app)
-locked=False
 
 cards={"2c":"2_of_clubs.png","3c":"3_of_clubs.png","4c":"4_of_clubs.png","5c":"5_of_clubs.png","6c":"6_of_clubs.png","7c":"7_of_clubs.png","8c":"8_of_clubs.png","9c":"9_of_clubs.png","10c":"10_of_clubs.png","11c":"jack_of_clubs.png","12c":"queen_of_clubs.png","13c":"king_of_clubs.png","1c":"ace_of_clubs.png","2d":"2_of_diamonds.png","3d":"3_of_diamonds.png","4d":"4_of_diamonds.png","5d":"5_of_diamonds.png","6d":"6_of_diamonds.png","7d":"7_of_diamonds.png","8d":"8_of_diamonds.png","9d":"9_of_diamonds.png","10d":"10_of_diamonds.png","11d":"jack_of_diamonds.png","12d":"queen_of_diamonds.png","13d":"king_of_diamonds.png","1d":"ace_of_diamonds.png","2h":"2_of_hearts.png","3h":"3_of_hearts.png","4h":"4_of_hearts.png","5h":"5_of_hearts.png","6h":"6_of_hearts.png","7h":"7_of_hearts.png","8h":"8_of_hearts.png","9h":"9_of_hearts.png","10h":"10_of_hearts.png","11h":"jack_of_hearts.png","12h":"queen_of_hearts.png","13h":"king_of_hearts.png","1h":"ace_of_hearts.png","2s":"2_of_spades.png","3s":"3_of_spades.png","4s":"4_of_spades.png","5s":"5_of_spades.png","6s":"6_of_spades.png","7s":"7_of_spades.png","8s":"8_of_spades.png","9s":"9_of_spades.png","10s":"10_of_spades.png","11s":"jack_of_spades.png","12s":"queen_of_spades.png","13s":"king_of_spades.png","1s":"ace_of_spades.png"}
 cardNum={'9h':9,'12c':12,'12d':12,'12h':12,'9c':9,'9d':9,'12s':12,'9s':9,'1s':1,'5s':5,'1c':1,'5h':5,'1h':1,'5c':5,'1d':1,'13c':13,'6c':6,'6d':6,'13d':13,'6h':6,'13h':13,'13s':13,'6s':6,'5d':5,'2s':2,'2d':2,'2c':2,'2h':2,'10h':10,'7d':7,'7c':7,'10c':10,'10d':10,'7h':7,'7s':7,'10s':10,'3s':3,'3h':3,'3c':3,'3d':3,'11d':11,'8h':8,'11c':11,'8c':8,'11h':11,'8d':8,'11s':11,'8s':8,'4s':4,'4h':4,'4d':4,'4c':4}
 
+def shuffledDeck(cards):
+    cards=OrderedDict(cards)
+    keys=list(cards.keys())
+    random.shuffle(keys)
+    cardList=[(key,cards[key]) for key in keys]
+    cards=OrderedDict(cardList)
+    return cards
+
+#Global variables
+locked=False
+cards=shuffledDeck(cards)
+clients=[]
+clientCount=0
+clientDeck=OrderedDict()
+clientTurn=cycle('')
+currentTurn=""
+lastPlayer=""
+lastPlayerCardList={}
+tempCardList=[]
+newTurn=True
+turnList=[]
+currentCard=0
+lastPlayerTruth=True
 
 def cToNum(card):
     if cardNum[card]==1:
@@ -30,20 +52,6 @@ def cToNum(card):
     return cardNum[card]
 
 
-def shuffledDeck(cards):
-    cards=OrderedDict(cards)
-    keys=list(cards.keys())
-    random.shuffle(keys)
-    cardList=[(key,cards[key]) for key in keys]
-    cards=OrderedDict(cardList)
-    return cards
-
-cards=shuffledDeck(cards)
-clients=[]
-clientCount=0
-clientDeck=OrderedDict()
-clientTurn=cycle('')
-currentTurn=""
 
 ##SocketIO
 @socketio.on('newClient')
@@ -76,14 +84,6 @@ def play(playerId):
         else:
              emit("onError","Game has already started!")
 
-
-lastPlayer=""
-lastPlayerCardList={}
-tempCardList=[]
-newTurn=True
-turnList=[]
-currentCard=0
-lastPlayerTruth=True
 def cmp(l1,l2):
     if ((len(l1) == len(l2)) and (all(i in l1 for i in l2))):
         return True
@@ -244,6 +244,24 @@ def sendCardByUser(user):
 def sendCardNumber(name):
     return send_from_directory('images',name)
 
+@app.route('/reset')
+def reset():
+    global locked,cards,clients,clientCount,clientDeck,clientTurn,currentTurn,lastPlayer,lastPlayerCardList,tempCardList,newTurn,turnList,currentCard,lastPlayerTruth
+    locked=False
+    cards=shuffledDeck(cards)
+    clients=[]
+    clientCount=0
+    clientDeck=OrderedDict()
+    clientTurn=cycle('')
+    currentTurn=""
+    lastPlayer=""
+    lastPlayerCardList={}
+    tempCardList=[]
+    newTurn=True
+    turnList=[]
+    currentCard=0
+    lastPlayerTruth=True
+    return "<h1>Game resetted</h1>"
 
 
 
