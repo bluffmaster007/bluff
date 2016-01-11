@@ -144,6 +144,9 @@ padding:3px;
 		$('#newUser').submit(function(e){
 		e.preventDefault();
 		socket.emit('newClient',$('input[name="login_name"]').val());
+		$.ajax({url: "/set_cookie/"+$('input[name="login_name"]').val(), success: function(result){		//ajax call
+			console.warn($('input[name="login_name"]').val()+":cookie request complete");
+		}});
 		$('input[name="login_name"]').prop('disabled', true);
 		$('#submitButton').prop('disabled',true);
 		});

@@ -9,6 +9,9 @@ from collections import OrderedDict
 import random,json
 from itertools import cycle
 
+from werkzeug.utils import redirect
+import random,string
+
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'secret!'
 socketio=SocketIO(app)
@@ -28,6 +31,7 @@ def shuffledDeck(cards):
 locked=False
 cards=shuffledDeck(cards)
 clients=[]
+clientsMap={}
 clientCount=0
 clientDeck=OrderedDict()
 clientTurn=cycle('')
@@ -40,6 +44,16 @@ turnList=[]
 currentCard=0
 lastPlayerTruth=True
 
+def ran(n):
+    return ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(n))
+
+def check_existing(cookie):
+    global clientsMap
+    if clientsMap.has_key(cookie):
+        return True
+    else:
+        return False
+
 def cToNum(card):
     if cardNum[card]==1:
         return "Ace"
@@ -50,6 +64,7 @@ def cToNum(card):
     if cardNum[card]==13:
         return "King"
     return cardNum[card]
+
 
 
 
@@ -218,7 +233,15 @@ def divideDeck():
 
 @app.route('/')
 def init():
-    return render_template("dashboard.html",client=clients)
+    global clientsMap,currentTurn,newTurn,currentCard
+    cookie = request.cookies.get("sess")
+    print(cookie)
+    if(check_existing(cookie)):
+        emit("gameStart","1")
+        emit('checkTurn',[currentTurn,newTurn])
+        emit("playingFor",currentCard)
+    else:
+        return render_template("dashboard.html",client=clients)
 
 @app.route('/users')
 def getAllUsers():
@@ -243,6 +266,19 @@ def sendCardByUser(user):
 @app.route('/images/<name>')
 def sendCardNumber(name):
     return send_from_directory('images',name)
+
+@app.route('/set_cookie/<client_name>')
+def cookie_insertion(client_name):
+    global clientsMap
+    redirect_to_index = redirect('/')
+    response = app.make_response(redirect_to_index )
+    cookie=ran(10)
+    #todo check if client already exists
+    clientsMap[cookie]=client_name
+    print clientsMap[cookie]
+    response.set_cookie('sess',cookie,max_age=7200)
+    return response
+
 
 @app.route('/reset')
 def reset():
