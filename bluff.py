@@ -238,7 +238,12 @@ def sendCard():
 def sendCardByUser(user):
     global clientDeck
     return render_template("index.html",images=clientDeck[user],clientList=clients)
-    
+
+@app.route('/v1/card/<user>')
+def sendcardsbyuser(user):
+    global clientDeck
+    return json.dumps(clientDeck[user])
+
 #to Load images
 @app.route('/images/<name>')
 def sendCardNumber(name):
