@@ -89,10 +89,14 @@ padding:3px;
 		currentTurn=data[0];
 		$('#'+currentTurn).css('background-color','yellow');
 		checkMyTurn();
-		if(!newTurnFlag)
+		if(!newTurnFlag)	{
 				$('#fakeCard').hide();
-			else
+				$('#pass').show();
+				}
+			else	{
 				$('#fakeCard').show();
+				$('#pass').hide();
+				}
 		});
 	
 	function checkMyTurn(){
@@ -101,6 +105,7 @@ padding:3px;
 			$('#submitTurn').prop('disabled',true);
 			$('#show').prop('disabled',true);
 			$('#fakeCard').hide();
+			$('#pass').hide();
 			
 		}
 		else {
@@ -109,11 +114,14 @@ padding:3px;
 		$('#actualCard').show();
 		//$('#fakeCard').show();
 		$('#useOriginal').show();
-		if(!newTurnFlag)
+		if(!newTurnFlag) {
 				$('#fakeCard').hide();
-			else
+				$('#pass').show();
+				}
+			else	{
 				$('#fakeCard').show();
-		
+				$('#pass').hide();
+				}
 		
 		}
 	}
@@ -227,6 +235,10 @@ padding:3px;
 	<span id="play">
 	<input type="submit" id="submitTurn" value="Play Turn">
 	</span>
+	<span id="pass">
+	<input type="button" id="pass" value="Pass" onclick="passTurn()">
+	</span>
+	
 	</form>
 	
 </div>
